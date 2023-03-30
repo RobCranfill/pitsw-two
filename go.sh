@@ -1,7 +1,8 @@
 #!/bin/bash
 # copy new binary to Pico in thingy mode, and then open com port to it
 
-cp ../build/pitsw/pitsw.uf2 /mnt/CIRCUITPY/
+sudo mount -t drvfs F: /mnt/CIRCUITPY
+cp ./build/pitsw.uf2 /mnt/CIRCUITPY/
 
-telecom
+minicom /dev/uh,what?
 
