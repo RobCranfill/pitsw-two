@@ -2,19 +2,17 @@ cmake_minimum_required(VERSION 3.12)
 
 # Pull in SDK (must be before project command)
 include(pico_sdk_import.cmake)
-include(pico_extras_import_optional.cmake)
-project(pitsw C CXX ASM)
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
-
+# include(pico_extras_import_optional.cmake)
 if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-# Initialize the SDK
+project(pitsw C CXX ASM)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+
 pico_sdk_init()
 
-# cran - why is this down here? should it be up there?
 add_compile_options(
         -Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
@@ -23,8 +21,7 @@ add_compile_options(
         )
 
 # ---------------------------------------------------
-# this project's make stuff - just move this here?
-# include(CMakeLists-pitsw.txt)
+# this project's make stuff (in addition to the 'project' command, above)
 
 add_executable(pitsw
         pitsw.c accel.c getline.c
