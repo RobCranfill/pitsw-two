@@ -1,5 +1,6 @@
 # pitsw-two
 Pi-In-The-Sky-Writer 2
+
 Picking up where I left off.... but with an RP2040!
 
 This project attempts to re-create the old toy "Sky Writer", which displayed messages in the air using persistance of vision.
@@ -12,5 +13,8 @@ Due to the number of GPIO pins required (at least 9), other, smaller, dev boards
 For now, I am prototyping this with solderless breadboard(s), but intend to create a custom PC board for it. 
 I have already used DIY Layout Creator to create the board.
 
+## Dev Environment
+This project is developed using Visual Studio Code (version 1.76 currently) under WSL2 on Windows, if that matters.
 
+Don't forget to set the various PICO_xxx environment variables! (See 'setenv.sh')
 

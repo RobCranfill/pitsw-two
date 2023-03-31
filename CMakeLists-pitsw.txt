@@ -1,5 +1,5 @@
 add_executable(pitsw
-        pitsw.c getline.c
+        pitsw.c accel.c getline.c
         )
 
 # Add pico_multicore which is required for multicore functionality
