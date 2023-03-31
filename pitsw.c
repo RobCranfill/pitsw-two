@@ -158,15 +158,22 @@ int main() {
 
     multicore_fifo_push_blocking(1);    // does this block *this* thread?
 
+/*
+    lessons learned:
+        main_sleep_sec = 1 -> compressed text
+        main_sleep_sec = 3-5 -> OK?
+        main_sleep_sec = 10 -> way too wide text
+
+*/
     int main_sleep_sec = 10; // this is just for testing... right?
 
     while (true) {
 
         if (multicore_fifo_wready()) {
 
-            // uint32_t r = (rand() % 10) + 1;
-            // printf("\nMaster requesting delay of %d ...\n", r);
-            // multicore_fifo_push_blocking(r);    // does this block *this* thread?
+            uint32_t r = (rand() % 10) + 1;
+            printf("\nMaster requesting main_sleep_sec of %d ...\n", r);
+            multicore_fifo_push_blocking(r);    // does this block *this* thread?
 
             printf("Master sleeping for %d seconds...\n", main_sleep_sec);
             sleep_ms(main_sleep_sec * 1000);      // This does not block the other core!
