@@ -17,6 +17,7 @@
 #include "pico/stdlib.h"
 
 #include "accel.h"
+#include "font1.h"
 
 // Is this the right way to do this?? rusty C ! :)
 #define PICO_PICO 0
@@ -136,6 +137,12 @@ int main() {
     srand(time(0));
 
     delay_startup();
+
+    font_test();
+    printf("EXITING EARLY!");
+    exit(1);
+
+
     init_leds();
     init_accel(i2c1);   // we are using i2c1, the alternate one, cuz it works better on the breadboard :-)
 

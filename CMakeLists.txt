@@ -24,7 +24,7 @@ add_compile_options(
 # this project's make stuff (in addition to the 'project' command, above)
 
 add_executable(pitsw
-        pitsw.c accel.c getline.c
+        pitsw.c accel.c font1.c getline.c
         )
 
 # Add pico_multicore which is required for multicore functionality
