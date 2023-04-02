@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "hardware/i2c.h"
+#include "hardware/gpio.h"
 #include "pico/binary_info.h"
 #include "pico/multicore.h"
 #include "pico/stdlib.h"
@@ -136,12 +137,50 @@ void delay_startup() {
     printf("Launching...\n");
 }
 
+uint32_t setBits(int n_bits, int *list_of_bit_numbers) {
+    uint32_t bits = 0;
+    for (int i=0; i<n_bits; i++) {
+        bits |= (1 << list_of_bit_numbers[i]);
+        // printf(" bits are now %04o\n", bits);
+    }
+    return bits;
+}
+
+
+void gpio_test() {
+    uint32_t the_mask = 0, the_data = 0;
+
+    init_leds();
+
+    the_mask = setBits(8, led_mapping);
+
+    int raw_data[] = {6, 8, 10, 12};
+    the_data = setBits(4, raw_data);
+
+    printf("the_mask = %012o, the_data = %012o\n", the_mask, the_data);
+
+    for (int i=1; i<30; i++) {
+        gpio_put_masked(the_mask, the_data);
+        sleep_ms(100);
+        gpio_put_masked(the_mask, 0);
+        sleep_ms(100);
+        }
+    printf("DONE!\n");
+
+}
+
 int main() {
 
     stdio_init_all();
     srand(time(0));
 
     delay_startup();
+
+    // GPIO test
+    gpio_test();
+    printf("EXITING EARLY!");
+    exit(1);
+
 
     // font_test();
     // printf("EXITING EARLY!");
