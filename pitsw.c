@@ -17,7 +17,7 @@
 #include "pico/stdlib.h"
 
 #include "accel.h"
-#include "font1.h"
+#include "font.h"
 
 // Is this the right way to do this?? rusty C ! :)
 #define PICO_PICO 0
@@ -39,7 +39,7 @@ int led_mapping[] = {6, 7, 8, 9, 10, 11, 12, 13};
 
 // This array is N_COLS wide, so to speak, and N_LEDS high.
 #define N_COLS  10
-int led_data[N_COLS][N_LEDS] = {
+int led_data_X[N_COLS][N_LEDS] = {
     {1,0,0,0,0,0,0,1},
     {0,1,0,0,0,0,1,0},
     {0,0,1,0,0,1,0,0},
@@ -78,6 +78,11 @@ void run_leds() {
     int led_hold_time_ms = (int)multicore_fifo_pop_blocking();
     printf("    run_leds led_hold_time_ms = %d\n", led_hold_time_ms);
 
+
+    int **led_data_to_use;
+    led_data_to_use = getVRasterForChar('?');
+
+
     while (true) {
 
         while (!get_wand_movement()) {
@@ -93,8 +98,8 @@ void run_leds() {
 
         for (int col=0; col<N_COLS; col++) {
             for (int i=0; i<N_LEDS; i++) {
-                // printf("setting led %d to %d\n", i, led_data[i][col]);
-                gpio_put(led_mapping[i], led_data[col][i]);
+                // printf("setting led %d to %d\n", i, led_data_to_use[col][i]);
+                gpio_put(led_mapping[i], led_data_to_use[col][i]);
             }
             sleep_ms(led_hold_time_ms);
         }
@@ -138,15 +143,15 @@ int main() {
 
     delay_startup();
 
-    font_test();
-    printf("EXITING EARLY!");
-    exit(1);
+    // font_test();
+    // printf("EXITING EARLY!");
+    // exit(1);
 
 
     init_leds();
     init_accel(i2c1);   // we are using i2c1, the alternate one, cuz it works better on the breadboard :-)
 
-    // show_accel();
+    show_accel();
 
     // set up increment button
     gpio_init(BUTTON_GPIO);

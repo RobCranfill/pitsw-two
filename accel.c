@@ -14,13 +14,8 @@ const uint8_t CTRL_REG_4 = 0x23;
 
 
 void lis3dh_init() {
-    uint8_t buf[2];
-
-// wtf?
-// int integer1, integer2, sum;
-// printf("Sum of %d ", integer1," and %d", integer2," is: %d\n", sum);
-
     // Turn normal mode and 1.344kHz data rate on
+    uint8_t buf[2];
     buf[0] = CTRL_REG_1;
     buf[1] = 0x97;
     i2c_write_blocking(i2c_default, ADDRESS, buf, 2, false);
@@ -33,7 +28,8 @@ void lis3dh_calc_value(uint16_t raw_value, float *final_value, bool isAccel) {
 
     if (isAccel == true) {
         scaling = 64 / senstivity;
-    } else {
+    } 
+    else {
         scaling = 64;
     }
 
@@ -90,7 +86,7 @@ bool get_wand_movement() {
     lis3dh_read_data(0x2A, &y_accel, true);
     // lis3dh_read_data(0x2C, &z_accel, true);
 
-    return (abs(y_accel) > THRESHOLD);
+    return abs(y_accel) > THRESHOLD;
 }
 
 void show_accel() {

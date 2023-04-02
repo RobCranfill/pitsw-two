@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
-const int vRasters[0x80][8] = {
+int vRasters[0x80][8] = {
 	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, // space character - ASCII 0x20
 	{0x00,0x00,0x00,0x06,0x5f,0x5f,0x06,0x00}, // '!'
 	{0x00,0x00,0x07,0x07,0x00,0x07,0x07,0x00}, // '"'
@@ -217,13 +217,13 @@ void font_test() {
 	for (int i=0; i<8; i++) {
 		printf(" r[%d] = 0x%02x ", i, foo[i]);
 		}
-	printf();
+	printf("\n\n");
 
 	const int *fum = getVRaster('?');
 	for (int i=0; i<8; i++) {
 		printf(" r['?'] = 0x%02x ", fum[i]);
 		}
-	printf();
+	printf("\n\n");
 	
 	return;
 
