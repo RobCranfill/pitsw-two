@@ -1,14 +1,11 @@
-// '''
-// font.c
-//   Horizontal and vertical raster data for a simple 8x8 font.
-//   Taken from 'font.h', according to my notes - but whose is that???
-// '''
+/**
+	font.c
+	Horizontal and vertical raster data for a simple 8x8 font.
+	Taken from 'font.h', according to my notes - but where was that from???
+**/
 
 #include <string.h>
 #include <stdio.h>
-
-char oct2bin[8][4] = {"000", "001", "010", "011", "100", "101", "110", "111"};
-char oct2txt[8][4] = {"___", "__*", "_*_", "_**", "*__", "*_*", "**_", "***"};
 
 const int vRasters[0x80][8] = {
 	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, // space character - ASCII 0x20
@@ -206,18 +203,41 @@ const int hRasters[0x80][8] = {
 	};
 
 
+const int *getVRaster(int n) {
+	return vRasters[n];
+	}
+
+const int *getVRasterForChar(char c) {
+	return vRasters[c - ' '];
+	}
+
 void font_test() {
 
-  char * testString = "Test";
+	const int *foo = getVRaster(1);
+	for (int i=0; i<8; i++) {
+		printf(" r[%d] = 0x%02x ", i, foo[i]);
+		}
+	printf();
 
-  for (int i=0; i<strlen(testString); i++) {
-    int ascii = testString[i];
-    printf("\nchar %d is %d\n", i, ascii);
-    int thisRasterSet[8];
-    for (int c=0; c<8; c++) {
-      thisRasterSet[c] = hRasters[ascii - 0x20][c];
-      printf(" r[%d] is %02x\n", c, thisRasterSet[c]);
-    } 
-  }
+	const int *fum = getVRaster('?');
+	for (int i=0; i<8; i++) {
+		printf(" r['?'] = 0x%02x ", fum[i]);
+		}
+	printf();
+	
+	return;
+
+	char * testString = "Test";
+
+	for (int i=0; i<strlen(testString); i++) {
+		int ascii = testString[i];
+		printf("\nchar %d is %d\n", i, ascii);
+		int thisRasterSet[8];
+		for (int c=0; c<8; c++) {
+			thisRasterSet[c] = hRasters[ascii - 0x20][c];
+			printf(" r[%d] is %02x\n", c, thisRasterSet[c]);
+		} 
+	}
+
 
 }
