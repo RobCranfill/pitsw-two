@@ -37,34 +37,36 @@ int led_mapping[] = {16, 17, 18, 19, 26, 22, 21, 20};
 int led_mapping[] = {6, 7, 8, 9, 10, 11, 12, 13};
 #endif
 
+// FIXME: why only this one???
+uint32_t setBits(int n_bits, int *list_of_bit_numbers);
 
-// This array is N_COLS wide, so to speak, and N_LEDS high.
-#define N_COLS  10
-int led_data_X[N_COLS][N_LEDS] = {
-    {1,0,0,0,0,0,0,1},
-    {0,1,0,0,0,0,1,0},
-    {0,0,1,0,0,1,0,0},
-    {0,0,0,1,1,0,0,0},
-    {0,0,0,1,1,0,0,0},
-    {0,0,1,0,0,1,0,0},
-    {0,1,0,0,0,0,1,0},
-    {1,0,0,0,0,0,0,1},
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0}
-};
+// // This array is N_COLS wide, so to speak, and N_LEDS high.
+// #define N_COLS  10
+// int led_data_X[N_COLS][N_LEDS] = {
+//     {1,0,0,0,0,0,0,1},
+//     {0,1,0,0,0,0,1,0},
+//     {0,0,1,0,0,1,0,0},
+//     {0,0,0,1,1,0,0,0},
+//     {0,0,0,1,1,0,0,0},
+//     {0,0,1,0,0,1,0,0},
+//     {0,1,0,0,0,0,1,0},
+//     {1,0,0,0,0,0,0,1},
+//     {0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0}
+// };
 
 // flag for verifying thread startup
 #define WORKER_STARTED_FLAG 666
 
 
-/* Turn the given LED on for just a tad.
-    I don't think this is useful.
-*/
-void flash(int gpio, int on_time_ms) {
-    gpio_put(gpio, 1);
-    sleep_ms(on_time_ms);
-    gpio_put(gpio, 0);
-}
+// /* Turn the given LED on for just a tad.
+//     I don't think this is useful.
+// */
+// void flash(int gpio, int on_time_ms) {
+//     gpio_put(gpio, 1);
+//     sleep_ms(on_time_ms);
+//     gpio_put(gpio, 0);
+// }
 
 /*
     Quickly blink X number of times, then wait a second.
@@ -79,36 +81,47 @@ void run_leds() {
     int led_hold_time_ms = (int)multicore_fifo_pop_blocking();
     printf("    run_leds led_hold_time_ms = %d\n", led_hold_time_ms);
 
-
-    int **led_data_to_use;
-    led_data_to_use = getVRasterForChar('?');
-
-
     while (true) {
 
         while (!get_wand_movement()) {
             tight_loop_contents(); // needed??
-        }
+            }
 
-        printf("firing LEDs and pausing %d ms\n", led_hold_time_ms);
+        printf("firing LEDs with pause of %d ms\n", led_hold_time_ms);
 
         if (multicore_fifo_rvalid()) {
             led_hold_time_ms = (int)multicore_fifo_pop_blocking();
             printf("    run_leds got updated led_hold_time_ms = %d\n", led_hold_time_ms);
             }
 
-        for (int col=0; col<N_COLS; col++) {
-            for (int i=0; i<N_LEDS; i++) {
-                // printf("setting led %d to %d\n", i, led_data_to_use[col][i]);
-                gpio_put(led_mapping[i], led_data_to_use[col][i]);
-            }
+        // where the rubber meets the road.
+        //
+        uint32_t led_mask = setBits(8, led_mapping);
+        uint32_t *led_data = getVRasterForChar('X'); // TODO:
+
+        printf("led_mask = %012o \n", led_mask);
+
+        for (int i=0; i<8; i++) {
+            gpio_put_masked(led_mask, led_data[i] << 6);
+            printf("led_data[i] = %012o \n", led_data[i] << 6);
             sleep_ms(led_hold_time_ms);
+            }
+
+        // for (int col=0; col<N_COLS; col++) {
+        //     for (int i=0; i<N_LEDS; i++) {
+        //         // printf("setting led %d to %d\n", i, led_data_to_use[col][i]);
+        //         gpio_put(led_mapping[i], led_data_to_use[col][i]);
+        //         }
+        //     sleep_ms(led_hold_time_ms);
+        //     }
+
         }
-
-    }
     printf("    **** worker done (shouldn't happen?)\n");
-}
+    }
 
+/**
+ * Set GPIO pins for LEDs to output, no pullup. TODO: right?
+*/
 void init_leds() {
     printf("init_leds...\n");
     printf("Setting pins to output:");
@@ -117,9 +130,9 @@ void init_leds() {
         printf(" %d", p);
         gpio_init(p);
         gpio_set_dir(p, GPIO_OUT);
-    }
+        }
     printf("\n");
-}
+    }
 
 // this gives me enough time to switch over to the terminal to see what's going on.
 void delay_startup() {
@@ -133,18 +146,18 @@ void delay_startup() {
         sleep_ms(100);
         gpio_put(PICO_DEFAULT_LED_PIN, 0);
         sleep_ms(900);
-    }
+        }
     printf("Launching...\n");
-}
+    }
 
 uint32_t setBits(int n_bits, int *list_of_bit_numbers) {
     uint32_t bits = 0;
     for (int i=0; i<n_bits; i++) {
         bits |= (1 << list_of_bit_numbers[i]);
         // printf(" bits are now %04o\n", bits);
-    }
+        }
     return bits;
-}
+    }
 
 
 void gpio_test() {
@@ -166,26 +179,23 @@ void gpio_test() {
         sleep_ms(100);
         }
     printf("DONE!\n");
-
-}
+    }
 
 int main() {
 
     stdio_init_all();
     srand(time(0));
 
-    delay_startup();
+    delay_startup();    // so I have time to crank up the term program and see things from the start
 
     // GPIO test
-    gpio_test();
-    printf("EXITING EARLY!");
-    exit(1);
-
-
-    // font_test();
+    // gpio_test();
     // printf("EXITING EARLY!");
     // exit(1);
 
+    // font_test_3();
+    // printf("EXITING EARLY!");
+    // exit(1);
 
     init_leds();
     init_accel(i2c1);   // we are using i2c1, the alternate one, cuz it works better on the breadboard :-)
@@ -204,7 +214,7 @@ int main() {
     if (g != WORKER_STARTED_FLAG) {
         printf("Error: Worker didn't start? Stopping.\n");
         exit(1);
-    }
+        }
     printf("Worker started. Sending messages....\n");
 
     multicore_fifo_push_blocking(1);    // does this block *this* thread?
@@ -214,7 +224,6 @@ int main() {
         main_sleep_sec = 1 -> compressed text
         main_sleep_sec = 3-5 -> OK?
         main_sleep_sec = 10 -> way too wide text
-
 */
     int main_sleep_sec = 10; // this is just for testing... right?
 
@@ -228,11 +237,10 @@ int main() {
 
             printf("Master sleeping for %d seconds...\n", main_sleep_sec);
             sleep_ms(main_sleep_sec * 1000);      // This does not block the other core!
-        }
+            }
         else {
             printf("Worker not ready????");
             sleep_ms(5000);
-        }
-
+            }
+        } // while true
     }
-}

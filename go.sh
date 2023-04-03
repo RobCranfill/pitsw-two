@@ -3,6 +3,7 @@
 
 sudo mount -t drvfs F: /mnt/CIRCUITPY
 cp ./build/pitsw.uf2 /mnt/CIRCUITPY/
+echo OK!
 
-echo minicom /dev/uh,what?
+# minicom /dev/uh,what?
 

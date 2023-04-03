@@ -1,5 +1,7 @@
-// font1.h
+// font.h
 
 void font_test();
-int **getVRaster(int n);
-int **getVRasterForChar(char c);
+void font_test_2();
+void font_test_3();
+uint32_t *getVRaster(int n);
+uint32_t *getVRasterForChar(char c);

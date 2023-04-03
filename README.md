@@ -18,3 +18,11 @@ This project is developed using Visual Studio Code (version 1.76 currently) unde
 
 Don't forget to set the various PICO_xxx environment variables! (See 'setenv.sh')
 
+## Dev Notes
+### Things to do
+* algo for detecting motion: one swipe, right to left (right?)
+* 
+### Ideas
+* Pre-render font data into GPIO bitmaps
+  * Just need to shift bit value left 6 bits!
+* 
