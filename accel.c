@@ -1,11 +1,14 @@
-// accelerometer-oriented code
+/**
+ * Accelerometer-oriented code
+ * 
+ **/
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
-
 
 // By default the accelerometer is on bus address 0x18
 const int ADDRESS = 0x18;
@@ -13,13 +16,26 @@ const uint8_t CTRL_REG_1 = 0x20;
 const uint8_t CTRL_REG_4 = 0x23;
 
 
+void test_accel_1() {
+
+    while (true) {
+        show_accel();
+        sleep_ms(1000);
+        }
+    }
+
+
+
+/**
+ * Initialize the hardware.
+*/
 void lis3dh_init() {
     // Turn normal mode and 1.344kHz data rate on
     uint8_t buf[2];
     buf[0] = CTRL_REG_1;
     buf[1] = 0x97;
     i2c_write_blocking(i2c_default, ADDRESS, buf, 2, false);
-}
+    }
 
 void lis3dh_calc_value(uint16_t raw_value, float *final_value, bool isAccel) {
     // Convert with respect to the value being temperature or acceleration reading 
@@ -28,14 +44,14 @@ void lis3dh_calc_value(uint16_t raw_value, float *final_value, bool isAccel) {
 
     if (isAccel == true) {
         scaling = 64 / senstivity;
-    } 
+        } 
     else {
         scaling = 64;
-    }
+        }
 
     // raw_value is signed
     *final_value = (float) ((int16_t) raw_value) / scaling;
-}
+    }
 
 void lis3dh_read_data(uint8_t reg, float *final_value, bool IsAccel) {
     // Read two bytes of data and store in a 16 bit data structure
@@ -52,9 +68,8 @@ void lis3dh_read_data(uint8_t reg, float *final_value, bool IsAccel) {
     raw_accel = (msb << 8) | lsb;
 
     lis3dh_calc_value(raw_accel, final_value, IsAccel);
-}
+    }
 
-// #endif
 
 void init_accel(i2c_inst_t *i2c) {
 
@@ -71,12 +86,12 @@ void init_accel(i2c_inst_t *i2c) {
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
 
     lis3dh_init();
-}
+    }
 
 /** 
- * return whatever is useful to note movemet.
+ * return whatever is useful to note movement.
 */
-#define THRESHOLD 0.1
+#define THRESHOLD 1.5
 bool get_wand_movement() {
     // float x_accel;
     float y_accel;
@@ -86,8 +101,11 @@ bool get_wand_movement() {
     lis3dh_read_data(0x2A, &y_accel, true);
     // lis3dh_read_data(0x2C, &z_accel, true);
 
-    return abs(y_accel) > THRESHOLD;
-}
+
+    return y_accel > THRESHOLD;
+    // return abs(y_accel) > THRESHOLD;
+
+    }
 
 void show_accel() {
     float x_accel, y_accel, z_accel;
@@ -100,4 +118,4 @@ void show_accel() {
 
     // Display data 
     printf("\n Acceleration: X: %0.3fg, Y: %0.3fg, Z: %0.3fg\n", x_accel, y_accel, z_accel);
-}
+    }
