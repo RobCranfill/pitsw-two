@@ -63,7 +63,7 @@ void run_leds() {
     //
     while (true) {
 
-        while (!get_wand_movement()) {
+        while (!detect_wand_movement()) {
             tight_loop_contents(); // TODO: i don't understand this. this blocks or returns or something?
             }
 
@@ -177,11 +177,9 @@ int main() {
 
     delay_startup();    // so I have time to crank up the term program and see things from the start
 
-#if 0
-    init_accel(i2c1);   // we are using i2c1, the alternate one, cuz it works better on the breadboard :-)
-    test_accel_1();
-    printf("done with test!");
-    exit(1);
+#if 1
+    init_accel();
+    test_accel(); // never returns
 #endif
 
 #if 0
