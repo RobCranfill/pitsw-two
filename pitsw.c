@@ -14,12 +14,13 @@
 #include "accel.h"
 #include "font.h"
 
-// FIXME: forwards. why only this one???
+// FIXME: a forward declaration - why only this one???
 uint32_t makeBitmask(int n_bits, int *list_of_bit_numbers);
 
 // Select the hardware to compile for.
 // Is this the right way to do this?? rusty C ! :)
 #define PICO_PICO 0
+// FIXME: can i do something like #define PICO_FEATHER (NOT PICO_PICO) ??
 #define PICO_FEATHER 1
 
 #if PICO_PICO
@@ -121,7 +122,7 @@ void init_leds() {
 void delay_startup() {
     sleep_ms(4000);
     printf("Counting down to launch...\n");
-    for (int i=3; i>0; i--) {
+    for (int i=5; i>0; i--) {
         printf("%d...\n", i);
 
         // PICO_DEFAULT_LED_PIN is a misnomer: it's not on any "pin", but it is GPIO 25
@@ -170,12 +171,21 @@ void gpio_test() {
     printf("gpio_test done!\n");
     }
 
+// private void test_led_13(void) {
+//     gpio_put_masked(the_mask, the_data);
+//     sleep_ms(100);
+//     }
+
 int main() {
 
     stdio_init_all();
     srand(time(0));
 
+    init_leds(); // do this early so LEDs can flash at startup?
+
     delay_startup();    // so I have time to crank up the term program and see things from the start
+
+    // test_led_13(); // does not return
 
 #if 1
     init_accel();
@@ -195,7 +205,9 @@ int main() {
     exit(1);
 #endif
 
-    init_leds();
+    // init_leds(); // already done above?
+
+    
     init_accel(i2c1);   // we are using i2c1, the alternate one, cuz it works better on the breadboard :-)
 
     show_accel();

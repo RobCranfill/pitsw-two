@@ -7,6 +7,7 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
+
 project(pitsw C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -23,9 +24,15 @@ add_compile_options(
 # ---------------------------------------------------
 # this project's make stuff (in addition to the 'project' command, above)
 
+
 add_executable(pitsw
-        pitsw.c accel.c font.c getline.c
+        pitsw.c accel.c font.c getline.c neopixel.c
         )
+
+# how to include
+#   ./pi-pico-adafruit-neopixels/pico_neopixels/include/Adafruit_NeoPixel.hpp
+target_include_directories(pitsw INTERFACE "/home/cran/proj/pi-pico-adafruit-neopixels/pico_neopixels/include/")
+
 
 # Add pico_multicore which is required for multicore functionality
 target_link_libraries(pitsw

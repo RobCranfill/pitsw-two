@@ -20,7 +20,19 @@ const uint8_t CTRL_REG_1 = 0x20;
 
 
 void test_accel() {
-    test_accel_3();
+    test_accel_4();
+    }
+
+// output text values for analysis - de-bounce?
+void test_accel_4() {
+    printf("Test mode 4\n");
+    int i = 0;
+    while (true) {
+        absolute_time_t foo = get_absolute_time();
+        printf("%d\t\%d\t", i++, foo._private_us_since_boot);
+        show_accel_tabbed();
+        sleep_ms(100);
+        }
     }
 
 void test_accel_3() {
@@ -31,6 +43,17 @@ void test_accel_3() {
         }
     }
 
+void test_accel_2() {
+    int i = 0;
+    while (true) {
+        if (detect_wand_movement()) {
+            printf("trigger #%d\n", i++);
+            // show_accel();
+            sleep_ms(500);
+            }
+        }
+    }
+
 void test_accel_1() {
     while (true) {
         show_accel();
@@ -38,14 +61,6 @@ void test_accel_1() {
         }
     }
 
-void test_accel_2() {
-    while (true) {
-        if (detect_wand_movement()) {
-            show_accel();
-            sleep_ms(1000);
-            }
-        }
-    }
 
 
 /**
@@ -95,7 +110,7 @@ void lis3dh_read_data(uint8_t reg, float *final_value) {
 */
 void init_accel() {
 
-    printf("init_accel...\n");
+    printf("init_accel using i2c_default...\n");
 
     // FIXME: this is hardcoded to i2c_default
 
@@ -130,8 +145,13 @@ bool detect_wand_movement() {
     lis3dh_read_data(0x2A, &y_accel);
     // lis3dh_read_data(0x2C, &z_accel);
 
+    if (y_accel > THRESHOLD) {
+        printf(" y_accel %4.1f\n -> ", y_accel);
+        return true;
+    }
+    return false;
 
-    return y_accel > THRESHOLD;
+    // return y_accel > THRESHOLD;
     // return abs(y_accel) > THRESHOLD;
 
     }
@@ -144,5 +164,16 @@ void show_accel() {
     lis3dh_read_data(0x2C, &z_accel);
 
     // Display data 
-    printf("Acceleration: X: %0.3fg, Y: %0.3fg, Z: %0.3fg\n", x_accel, y_accel, z_accel);
+    printf("%0.3f, %0.3f, %0.3f\n", x_accel, y_accel, z_accel);
+    }
+
+void show_accel_tabbed() {
+    float x_accel, y_accel, z_accel;
+
+    lis3dh_read_data(0x28, &x_accel);
+    lis3dh_read_data(0x2A, &y_accel);
+    lis3dh_read_data(0x2C, &z_accel);
+
+    // Display data 
+    printf("%0.3f\t%0.3f\t%0.3f\n", x_accel, y_accel, z_accel);
     }
