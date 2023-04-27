@@ -1,7 +1,7 @@
 /**
  * Accelerometer-oriented code; for the Adafruit LIS3DH.
  * 
- * FIME: Hard-coded to i2c_default, whatever that is.
+ * FIXME: Hard-coded to i2c_default, whatever that is.
  **/
 
 #include <stdio.h>
@@ -15,13 +15,62 @@
 
 // By default the accelerometer is on I2C bus address 0x18
 const int ADDRESS = 0x18;
-const uint8_t CTRL_REG_1 = 0x20;
+const uint8_t CTRL_REG_1 = 0x20; // FIXME: why not a #define?
 // const uint8_t CTRL_REG_4 = 0x23; - used for temperature sensing, which we don't do.
 
+#define X_ACCEL_REG    0x28
+#define Y_ACCEL_REG    0x2A
+#define Z_ACCEL_REG    0x2C
 
+
+// we run a test - which one?
+// does not return, probably
 void test_accel() {
-    test_accel_4();
+
+    // test_accel_1();
+    // test_accel_2();
+    // test_accel_3();
+    // test_accel_4();
+    test_accel_5();
     }
+
+
+#define Y_THRESHOLD 1.5f
+
+// 10, 10 works perfectly; so does 1,1 FIXME: NEEDED?
+#define DEBOUNCE_SLEEP_MS   1
+#define ACCEL_READ_SLEEP_MS 1
+
+// how to detect one swipe of the wand?
+// how to de-bounce the input?
+void test_accel_5() {
+
+    float y_accel;
+    int i = 0;
+
+    while (true) {
+        sleep_ms(ACCEL_READ_SLEEP_MS);
+        lis3dh_read_data(Y_ACCEL_REG, &y_accel);
+        if (y_accel > Y_THRESHOLD) {
+            absolute_time_t at = get_absolute_time();
+            printf("%d\t\%d\t", i++, at._private_us_since_boot);
+            printf("   y_accel %4.1f\n -> ", y_accel);
+
+            bool hasGoneLow = false;
+            while (!hasGoneLow) {
+                lis3dh_read_data(Y_ACCEL_REG, &y_accel);
+                if (y_accel < Y_THRESHOLD) {
+                    hasGoneLow = true;
+                    printf("** debounce!\n");
+                    sleep_ms(DEBOUNCE_SLEEP_MS);
+                    }
+                }
+
+            }
+        }
+
+    }
+
 
 // output text values for analysis - de-bounce?
 void test_accel_4() {
@@ -83,6 +132,7 @@ void lis3dh_init() {
 
     printf("out of lis3dh_init\n");
     }
+
 
 void lis3dh_calc_value(uint16_t raw_value, float *final_value) {
     // Convert with respect to the value being temperature or acceleration reading 
@@ -146,9 +196,9 @@ bool detect_wand_movement() {
     float y_accel;
     // float z_accel;
 
-    // lis3dh_read_data(0x28, &x_accel);
-    lis3dh_read_data(0x2A, &y_accel);
-    // lis3dh_read_data(0x2C, &z_accel);
+    // lis3dh_read_data(X_ACCEL_REG, &x_accel);
+    lis3dh_read_data(Y_ACCEL_REG, &y_accel);
+    // lis3dh_read_data(Z_ACCEL_REG, &z_accel);
 
     if (y_accel > THRESHOLD) {
         printf(" y_accel %4.1f\n -> ", y_accel);
@@ -164,9 +214,9 @@ bool detect_wand_movement() {
 void show_accel() {
     float x_accel, y_accel, z_accel;
 
-    lis3dh_read_data(0x28, &x_accel);
-    lis3dh_read_data(0x2A, &y_accel);
-    lis3dh_read_data(0x2C, &z_accel);
+    lis3dh_read_data(X_ACCEL_REG, &x_accel);
+    lis3dh_read_data(Y_ACCEL_REG, &y_accel);
+    lis3dh_read_data(Z_ACCEL_REG, &z_accel);
 
     // Display data 
     printf("%0.3f, %0.3f, %0.3f\n", x_accel, y_accel, z_accel);
@@ -175,9 +225,9 @@ void show_accel() {
 void show_accel_tabbed() {
     float x_accel, y_accel, z_accel;
 
-    lis3dh_read_data(0x28, &x_accel);
-    lis3dh_read_data(0x2A, &y_accel);
-    lis3dh_read_data(0x2C, &z_accel);
+    lis3dh_read_data(X_ACCEL_REG, &x_accel);
+    lis3dh_read_data(Y_ACCEL_REG, &y_accel);
+    lis3dh_read_data(Z_ACCEL_REG, &z_accel);
 
     // Display data 
     printf("%0.3f\t%0.3f\t%0.3f\n", x_accel, y_accel, z_accel);

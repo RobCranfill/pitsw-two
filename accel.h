@@ -5,6 +5,7 @@ void test_accel_1(void);
 void test_accel_2(void);
 void test_accel_3(void);
 void test_accel_4(void);
+void test_accel_5(void);
 
 bool detect_wand_movement(void);
 void show_accel(void);
