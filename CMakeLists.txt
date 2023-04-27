@@ -26,12 +26,13 @@ add_compile_options(
 
 
 add_executable(pitsw
-        pitsw.c accel.c font.c getline.c neopixel.c
+        pitsw.c accel.c font.c getline.c
         )
 
 # how to include
 #   ./pi-pico-adafruit-neopixels/pico_neopixels/include/Adafruit_NeoPixel.hpp
-target_include_directories(pitsw INTERFACE "/home/cran/proj/pi-pico-adafruit-neopixels/pico_neopixels/include/")
+# no, don't
+#  target_include_directories(pitsw INTERFACE "/home/cran/proj/pi-pico-adafruit-neopixels/pico_neopixels/include/")
 
 
 # Add pico_multicore which is required for multicore functionality

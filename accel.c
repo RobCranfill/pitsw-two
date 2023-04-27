@@ -25,13 +25,18 @@ void test_accel() {
 
 // output text values for analysis - de-bounce?
 void test_accel_4() {
+
+    int pause_ms = 100;
     printf("Test mode 4\n");
+    printf("pause_ms: %d\n", pause_ms);
+    printf("t_boot\tx\ty\tz\n");
+
     int i = 0;
     while (true) {
         absolute_time_t foo = get_absolute_time();
         printf("%d\t\%d\t", i++, foo._private_us_since_boot);
         show_accel_tabbed();
-        sleep_ms(100);
+        sleep_ms(pause_ms);
         }
     }
 
