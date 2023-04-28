@@ -15,4 +15,4 @@ void lis3dh_init(void);
 void init_accel();
 void lis3dh_calc_value(uint16_t raw_value, float *final_value);
 void lis3dh_read_data(uint8_t reg, float *final_value);
-
+float lis3dh_read_y_accel(void);

@@ -42,6 +42,12 @@ int led_mapping[] = {6, 7, 8, 9, 10, 11, 12, 13};
 #define WORKER_STARTED_FLAG 666
 
 
+#define Y_THRESHOLD 1.5f
+// 10, 10 works perfectly; so does 1,1 FIXME: are these even needed?
+#define DEBOUNCE_SLEEP_MS   1
+#define ACCEL_READ_SLEEP_MS 1
+
+
 /// @brief This is the never-ending task the 2nd core runs.
 void run_leds() {
 
@@ -64,41 +70,80 @@ void run_leds() {
     //
     while (true) {
 
-        while (!detect_wand_movement()) {
-            tight_loop_contents(); // TODO: i don't understand this. this blocks or returns or something?
+        // Display the current chunk of message.
+        //
+        // FIXME: this is currently just one character. :-(
+        uint32_t *led_data = getVRasterForChar(msg[msg_index]);
+
+        float y_accel = lis3dh_read_y_accel();
+        if (y_accel < Y_THRESHOLD) {
+            tight_loop_contents();  // FIXME: or sleep?
             }
+        else
+            {
+            swipe_count++;
+            // just for fun show timings; remove later
+            absolute_time_t at = get_absolute_time();
+            printf("#%d\t\%d\t", swipe_count, at._private_us_since_boot);
+            printf("   y_accel %4.1f\n \n", y_accel);
+
+
+            // FIXME: the 8 here is the width of one character
+            for (int i=0; i<8; i++) {
+                gpio_put_masked(led_mask, led_data[i] << 6);    // bitmap akligns when shifted over 6 places
+                printf("led_data[i] = %08b \n", led_data[i]);
+                sleep_ms(led_hold_time_ms);
+                }
+
+
+            // debounce - wait for the acc to go low again.
+            bool hasGoneLow = false;
+            while (!hasGoneLow) {
+
+                y_accel = lis3dh_read_y_accel();
+                if (y_accel < Y_THRESHOLD) {
+                    hasGoneLow = true;
+                    printf("** debounce!\n");
+                    // sleep_ms(DEBOUNCE_SLEEP_MS);
+                    }
+                else {
+                    tight_loop_contents();  // FIXME: or sleep?
+                    }
+                }
+
+            }
+
+
+        // while (!detect_wand_movement()) {
+        //     // TODO: i don't understand this. this blocks or returns or what?
+        //     // @see https://forums.raspberrypi.com/viewtopic.php?t=349804
+        //     tight_loop_contents(); 
+        //     }
 
         // printf("firing LEDs with pause of %d ms\n", led_hold_time_ms);
 
-        // check for a message from the 'main' core, the one that launched this one.
+        // Check for a message from the 'main' thread/core, the one that launched this one.
+        //
+        // FIXME: for now this is the delay, but this perhaps should be the message to display?
+        // 
         if (multicore_fifo_rvalid()) {
             led_hold_time_ms = (int)multicore_fifo_pop_blocking();
             printf("    run_leds got updated led_hold_time_ms = %d\n", led_hold_time_ms);
             }
 
-        // Display the current chunk of message.
-        //
 
-        uint32_t *led_data = getVRasterForChar(msg[msg_index]);
+        // // FIXME: for test, increment here
+        // swipe_count += 1;
+        // if (swipe_count > 10) {
+        //     swipe_count = 0;
+        //     msg_index += 1;
+        //     if (msg_index >= sizeof(msg)) {
+        //         msg_index = 0;
+        //         }
+        //     led_data = getVRasterForChar(msg[msg_index]);
+        //     printf(" new character: '%c' \n", msg[msg_index]);
+        //     }
 
-        for (int i=0; i<8; i++) {
-            gpio_put_masked(led_mask, led_data[i] << 6);
-            // printf("led_data[i] = %012o \n", led_data[i] << 6);
-            sleep_ms(led_hold_time_ms);
-            }
-
-        // FIXME: for test, increment here
-        swipe_count += 1;
-        if (swipe_count > 10) {
-            swipe_count = 0;
-            msg_index += 1;
-            if (msg_index >= sizeof(msg)) {
-                msg_index = 0;
-                }
-            led_data = getVRasterForChar(msg[msg_index]);
-            printf(" new character: '%c' \n", msg[msg_index]);
-            }
-                
         }
     printf("    **** worker done (shouldn't happen?)\n");
     }
@@ -187,7 +232,7 @@ int main() {
 
     // test_led_13(); // does not return
 
-#if 1
+#if 0
     init_accel();
     test_accel(); // never returns
 #endif
@@ -205,18 +250,14 @@ int main() {
     exit(1);
 #endif
 
-    // init_leds(); // already done above?
-
-    
     init_accel(i2c1);   // we are using i2c1, the alternate one, cuz it works better on the breadboard :-)
 
-    show_accel();
-
+#if 0
     // set up increment button - so far unused TODO:
     gpio_init(BUTTON_GPIO);
     gpio_set_dir(BUTTON_GPIO, GPIO_IN);
     gpio_pull_up(BUTTON_GPIO);
-
+#endif
 
     // Launch worker and wait for it to start up
     multicore_launch_core1(run_leds);

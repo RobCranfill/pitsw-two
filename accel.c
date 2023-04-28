@@ -36,10 +36,47 @@ void test_accel() {
 
 
 #define Y_THRESHOLD 1.5f
-
 // 10, 10 works perfectly; so does 1,1 FIXME: NEEDED?
 #define DEBOUNCE_SLEEP_MS   1
 #define ACCEL_READ_SLEEP_MS 1
+
+/** 
+ * return whatever is useful to note movement.
+ * This will wait for the start of a swipe, and return true then.
+*/
+bool detect_wand_movement() {
+
+    float y_accel;
+    int i = 0;
+
+    while (true) {
+        lis3dh_read_data(Y_ACCEL_REG, &y_accel);
+        if (y_accel < Y_THRESHOLD) {
+            sleep_ms(ACCEL_READ_SLEEP_MS);
+            }
+        else
+            {
+            // just for fun show timings; remove later
+            absolute_time_t at = get_absolute_time();
+            printf("%d\t\%d\t", i++, at._private_us_since_boot);
+            printf("   y_accel %4.1f\n -> ", y_accel);
+
+            // debounce
+            bool hasGoneLow = false;
+            while (!hasGoneLow) {
+                lis3dh_read_data(Y_ACCEL_REG, &y_accel);
+                if (y_accel < Y_THRESHOLD) {
+                    hasGoneLow = true;
+                    printf("** debounce!\n");
+                    sleep_ms(DEBOUNCE_SLEEP_MS);
+                    }
+                }
+
+            }
+        }
+
+    }
+
 
 // how to detect one swipe of the wand?
 // how to de-bounce the input?
@@ -187,28 +224,11 @@ void init_accel() {
     printf("init_accel OK!\n");
     }
 
-/** 
- * return whatever is useful to note movement.
-*/
-#define THRESHOLD 1.5
-bool detect_wand_movement() {
-    // float x_accel;
+
+float lis3dh_read_y_accel(void) {
     float y_accel;
-    // float z_accel;
-
-    // lis3dh_read_data(X_ACCEL_REG, &x_accel);
-    lis3dh_read_data(Y_ACCEL_REG, &y_accel);
-    // lis3dh_read_data(Z_ACCEL_REG, &z_accel);
-
-    if (y_accel > THRESHOLD) {
-        printf(" y_accel %4.1f\n -> ", y_accel);
-        return true;
-    }
-    return false;
-
-    // return y_accel > THRESHOLD;
-    // return abs(y_accel) > THRESHOLD;
-
+    lis3dh_read_data(X_ACCEL_REG, &y_accel);
+    return y_accel;
     }
 
 void show_accel() {
