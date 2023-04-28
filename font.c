@@ -15,14 +15,25 @@ void font_test() {
 	font_test_4();
 	}
 
+
+void render_bitmap(uint32_t line) {
+	for (int i=0; i<CHAR_WIDTH_BITS; i++) {
+		printf("%c", (line & (1 << i)) ? '*':' ');
+		}
+	printf("\n");
+	}
+
 void font_test_4() {
 
 	char *test = "XO!";
 	uint32_t *led_data = getRastersForStr(test);
 	for (int i=0; i<CHAR_WIDTH_BITS*strlen(test); i++) {
-		printf("led_data[%02d] = %08b \n", i, led_data[i]);
+		printf("led_data[%02d] = %08b = ", i, led_data[i]);
+		render_bitmap(led_data[i]);
 		}
+	printf("\nTest 4 done!\n");
 	}
+
 
 
 /**

@@ -62,9 +62,12 @@ void run_leds() {
     uint32_t led_mask = makeBitmask(N_LEDS, led_mapping);
     printf("led_mask = %012o \n", led_mask);
 
-    char *msg = "Test";
-    int msg_index = 0;
+    char *msg = "Testing!";
     int swipe_count = 0;
+
+    uint32_t *led_data = getRastersForStr(msg);
+    int bits_wide_to_display = 16; // FIXME: variable? depends on ???
+    int led_data_start = 0;
 
     // This loops forever, watching for a wand movement. When it gets one, it runs the LEDs once.
     //
@@ -72,8 +75,6 @@ void run_leds() {
 
         // Display the current chunk of message.
         //
-        // FIXME: this is currently just one character. :-(
-        uint32_t *led_data = getVRasterForChar(msg[msg_index]);
 
         float y_accel = lis3dh_read_y_accel();
         if (y_accel < Y_THRESHOLD) {
@@ -87,10 +88,9 @@ void run_leds() {
             printf("#%d\t\%d\t", swipe_count, at._private_us_since_boot);
             printf("   y_accel %4.1f\n \n", y_accel);
 
-
-            for (int i=0; i<CHAR_WIDTH_BITS; i++) {
-                gpio_put_masked(led_mask, led_data[i] << 6);    // bitmap akligns when shifted over 6 places
-                printf("led_data[i] = %08b \n", led_data[i]);
+            for (int i=0; i<bits_wide_to_display; i++) {
+                gpio_put_masked(led_mask, led_data[led_data_start + i] << 6);    // bitmap akligns when shifted over 6 places
+                printf("led_data[i] = %08b \n", led_data[led_data_start + i]);
                 sleep_ms(led_hold_time_ms);
                 }
 
@@ -112,12 +112,13 @@ void run_leds() {
 
             }
 
-
-        // while (!detect_wand_movement()) {
-        //     // TODO: i don't understand this. this blocks or returns or what?
-        //     // @see https://forums.raspberrypi.com/viewtopic.php?t=349804
-        //     tight_loop_contents(); 
-        //     }
+#if 0
+        while (!detect_wand_movement()) {
+            // TODO: i don't understand this. this blocks or returns or what?
+            // @see https://forums.raspberrypi.com/viewtopic.php?t=349804
+            tight_loop_contents(); 
+            }
+#endif
 
         // printf("firing LEDs with pause of %d ms\n", led_hold_time_ms);
 
@@ -130,21 +131,22 @@ void run_leds() {
             printf("    run_leds got updated led_hold_time_ms = %d\n", led_hold_time_ms);
             }
 
-
-        // // FIXME: for test, increment here
-        // swipe_count += 1;
-        // if (swipe_count > 10) {
-        //     swipe_count = 0;
-        //     msg_index += 1;
-        //     if (msg_index >= sizeof(msg)) {
-        //         msg_index = 0;
-        //         }
-        //     led_data = getVRasterForChar(msg[msg_index]);
-        //     printf(" new character: '%c' \n", msg[msg_index]);
-        //     }
+#if 0
+        // FIXME: for test, increment here
+        swipe_count += 1;
+        if (swipe_count > 10) {
+            swipe_count = 0;
+            msg_index += 1;
+            if (msg_index >= sizeof(msg)) {
+                msg_index = 0;
+                }
+            led_data = getVRasterForChar(msg[msg_index]);
+            printf(" new character: '%c' \n", msg[msg_index]);
+            }
+#endif
 
         }
-    printf("    **** worker done (shouldn't happen?)\n");
+    printf("    **** worker done (shouldn't happen?)\n"); // TODO: is there some shutdown thing I can do? 
     }
 
 /**
@@ -224,12 +226,12 @@ int main() {
 
     stdio_init_all();
     srand(time(0));
-
     init_leds(); // do this early so LEDs can flash at startup?
-
     delay_startup();    // so I have time to crank up the term program and see things from the start
 
-    // test_led_13(); // does not return
+#if 0
+    test_led_13(); // does not return
+#endif
 
 #if 0
     init_accel();
@@ -243,7 +245,7 @@ int main() {
     exit(1);
 #endif
 
-#if 1
+#if 0
     font_test();
     printf("done with font test!");
     exit(1);
