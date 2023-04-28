@@ -59,7 +59,7 @@ void run_leds() {
     int led_hold_time_ms = (int)multicore_fifo_pop_blocking();
     printf("    run_leds led_hold_time_ms = %d\n", led_hold_time_ms);
 
-    uint32_t led_mask = makeBitmask(8, led_mapping);
+    uint32_t led_mask = makeBitmask(N_LEDS, led_mapping);
     printf("led_mask = %012o \n", led_mask);
 
     char *msg = "Test";
@@ -88,8 +88,7 @@ void run_leds() {
             printf("   y_accel %4.1f\n \n", y_accel);
 
 
-            // FIXME: the 8 here is the width of one character
-            for (int i=0; i<8; i++) {
+            for (int i=0; i<CHAR_WIDTH_BITS; i++) {
                 gpio_put_masked(led_mask, led_data[i] << 6);    // bitmap akligns when shifted over 6 places
                 printf("led_data[i] = %08b \n", led_data[i]);
                 sleep_ms(led_hold_time_ms);
@@ -200,7 +199,7 @@ void gpio_test() {
 
     init_leds();
 
-    the_mask = makeBitmask(8, led_mapping);
+    the_mask = makeBitmask(N_LEDS, led_mapping);
 
     int raw_data[] = {6, 8, 10, 12};
     the_data = makeBitmask(4, raw_data);
@@ -244,9 +243,9 @@ int main() {
     exit(1);
 #endif
 
-#if 0
-    font_test_3();
-    printf("done with test!");
+#if 1
+    font_test();
+    printf("done with font test!");
     exit(1);
 #endif
 
