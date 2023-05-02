@@ -62,12 +62,14 @@ void run_leds() {
     uint32_t led_mask = makeBitmask(N_LEDS, led_mapping);
     printf("led_mask = %012o \n", led_mask);
 
-    char *msg = "Testing!";
+    char *msg = "TX-O";
     int swipe_count = 0;
 
     uint32_t *led_data = getRastersForStr(msg);
     int bits_wide_to_display = 16; // FIXME: variable? depends on ???
     int led_data_start = 0;
+
+    int t_start = get_absolute_time()._private_us_since_boot;
 
     // This loops forever, watching for a wand movement. When it gets one, it runs the LEDs once.
     //
@@ -82,15 +84,21 @@ void run_leds() {
             }
         else
             {
-            swipe_count++;
-            // just for fun show timings; remove later
-            absolute_time_t at = get_absolute_time();
-            printf("#%d\t\%d\t", swipe_count, at._private_us_since_boot);
-            printf("   y_accel %4.1f\n \n", y_accel);
 
-            for (int i=0; i<bits_wide_to_display; i++) {
-                gpio_put_masked(led_mask, led_data[led_data_start + i] << 6);    // bitmap akligns when shifted over 6 places
-                printf("led_data[i] = %08b \n", led_data[led_data_start + i]);
+            // just for fun show timings; remove later
+            swipe_count++;
+            float t_delta = (get_absolute_time()._private_us_since_boot - t_start) / 1000000;
+
+            printf("s=%d t=%4.1f d=%d @%d \n", swipe_count, t_delta, led_hold_time_ms, led_data_start);
+            // printf(" >>>>>>>> s=%d d=%d \n", swipe_count, led_hold_time_ms);
+            // printf("   y_accel %4.1f\n \n", y_accel);
+
+            for (int i=bits_wide_to_display; i>=0; i--) {
+                // bitmap akligns when shifted over 6 places
+                gpio_put_masked(led_mask, led_data[led_data_start + i] << 6);
+
+                printf("led_data[%02d] = %08b \n", led_data_start + i, led_data[led_data_start + i]);
+
                 sleep_ms(led_hold_time_ms);
                 }
 
@@ -116,7 +124,7 @@ void run_leds() {
         while (!detect_wand_movement()) {
             // TODO: i don't understand this. this blocks or returns or what?
             // @see https://forums.raspberrypi.com/viewtopic.php?t=349804
-            tight_loop_contents(); 
+            tight_loop_contents();
             }
 #endif
 
@@ -124,8 +132,8 @@ void run_leds() {
 
         // Check for a message from the 'main' thread/core, the one that launched this one.
         //
-        // FIXME: for now this is the delay, but this perhaps should be the message to display?
-        // 
+        // FIXME: for now this is the delay time, but this perhaps should be the message to display?
+        //
         if (multicore_fifo_rvalid()) {
             led_hold_time_ms = (int)multicore_fifo_pop_blocking();
             printf("    run_leds got updated led_hold_time_ms = %d\n", led_hold_time_ms);
@@ -146,7 +154,7 @@ void run_leds() {
 #endif
 
         }
-    printf("    **** worker done (shouldn't happen?)\n"); // TODO: is there some shutdown thing I can do? 
+    printf("    **** worker done (shouldn't happen?)\n"); // TODO: is there some shutdown thing I can do?
     }
 
 /**
@@ -183,7 +191,7 @@ void delay_startup() {
 
 /// @brief Create a bitmask, setting just those bits listed.
 /// @param n_bits TODO: can we git rid of this and just pass in a list? No, this is C!
-/// @param list_of_bit_numbers 
+/// @param list_of_bit_numbers
 /// @return the bitmask
 uint32_t makeBitmask(int n_bits, int *list_of_bit_numbers) {
     uint32_t bits = 0;
@@ -251,7 +259,10 @@ int main() {
     exit(1);
 #endif
 
-    init_accel(i2c1);   // we are using i2c1, the alternate one, cuz it works better on the breadboard :-)
+    // Initialize I2C and the accelerometer hardware.
+    //
+    // init_accel(i2c1);   // we are using i2c1, the alternate one, cuz it works better on the breadboard :-)
+    init_accel();   // FIXME: NO WE ARE NOT! 
 
 #if 0
     // set up increment button - so far unused TODO:
@@ -262,14 +273,15 @@ int main() {
 
     // Launch worker and wait for it to start up
     multicore_launch_core1(run_leds);
-    uint32_t g = multicore_fifo_pop_blocking();
-    if (g != WORKER_STARTED_FLAG) {
-        printf("Error: Worker didn't start? Stopping.\n");
+    uint32_t flag = multicore_fifo_pop_blocking(); // gets "started" response
+    if (flag != WORKER_STARTED_FLAG) {
+        printf("Error: Worker didn't start? Got %d. Stopping.\n", flag);
         exit(1);
         }
     printf("Worker started. Sending messages....\n");
 
-    multicore_fifo_push_blocking(1);    // does this block *this* thread?
+    // FIXME: not needed? yes, it's needed, it's the initial value of led_hold_time_ms, right?
+    multicore_fifo_push_blocking(5);    // does this block *this* thread?
 
 /*
     lessons learned:
@@ -277,17 +289,17 @@ int main() {
         main_sleep_sec = 3-5 -> OK?
         main_sleep_sec = 10 -> way too wide text
 */
-    int main_sleep_sec = 10; // this is just for testing... right?
+    int main_sleep_sec = 10; // TODO: this is for main thread event loop - smaller later to handle GUI?
 
     while (true) {
 
         if (multicore_fifo_wready()) {
 
-            uint32_t r = (rand() % 10) + 1;
-            printf("\nMaster requesting main_sleep_sec of %d ...\n", r);
-            multicore_fifo_push_blocking(r);    // does this block *this* thread? no!
+            uint32_t led_delay_ms = (rand() % 10) + 1;
+            printf("\nMaster requesting main_sleep_sec of %d ...\n", led_delay_ms);
+            multicore_fifo_push_blocking(led_delay_ms);    // does this block *this* thread? no!
 
-            printf("Master sleeping for %d seconds...\n", main_sleep_sec);
+            printf("Master thread sleeping for %d seconds...\n", main_sleep_sec);
             sleep_ms(main_sleep_sec * 1000);      // This does not block the other core!
             }
         else {

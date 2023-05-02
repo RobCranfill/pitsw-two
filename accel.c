@@ -217,8 +217,8 @@ void init_accel() {
 
     printf("I2C init OK....\n");
 
-    // Make the I2C pins available to picotool - FIXME: not used?
-    // bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
+    // Make the I2C pins available to picotool - FIXME: YES?
+    bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
 
     lis3dh_init();
     printf("init_accel OK!\n");
